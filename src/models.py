@@ -7,6 +7,10 @@ class MediaType(enum.Enum):
     VIDEO = 1
     PHOTO = 2
 
+follows = db.Table('follows',
+        db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+        db.Column('following_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    )
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -18,6 +22,14 @@ class User(db.Model):
     posts = db.relationship('Post',backref='user', lazy=True)
     comments = db.relationship('Comment',backref='user', lazy=True)
 
+    following = db.relationship(
+        'User', 
+        lambda: follows,
+        primaryjoin=lambda: User.id == follows.c.user_id,
+        secondaryjoin=lambda: User.id == follows.c.following_id,
+        backref='followers'
+        )
+
     def __repr__(self):
         return '<User %r>' % self.username
 
@@ -28,7 +40,6 @@ class User(db.Model):
             "name": self.name,
             "last": self.last,
         }
-
 
 
 class Post(db.Model):
